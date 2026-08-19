@@ -159,7 +159,11 @@ button, input { font: inherit; }
 }
 
 .lang-btn {
-  padding: 2px 7px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 24px;
+  padding: 4px 8px;
   border: 1px solid var(--sb-border);
   border-radius: var(--radius-sm);
   background: transparent;
@@ -170,6 +174,7 @@ button, input { font: inherit; }
   text-transform: uppercase;
   cursor: pointer;
   line-height: 1.6;
+  box-sizing: border-box;
   transition: background var(--transition), color var(--transition), border-color var(--transition);
 }
 
@@ -220,6 +225,16 @@ button, input { font: inherit; }
 }
 
 .upload-zone:hover::before {
+  opacity: 1;
+  color: var(--pbi-gold);
+}
+
+.upload-zone.dragover {
+  border-color: var(--pbi-gold);
+  background: rgba(242,200,17,.12);
+}
+
+.upload-zone.dragover::before {
   opacity: 1;
   color: var(--pbi-gold);
 }
@@ -351,6 +366,37 @@ button, input { font: inherit; }
   font-weight: 700;
   color: #fff;
   line-height: 1;
+}
+
+/* ── Search field (G10) ── */
+
+.search-field {
+  margin-bottom: 8px;
+}
+
+.search-field label {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--sb-muted);
+}
+
+.search-field input[type="search"] {
+  width: 100%;
+  min-height: 30px;
+  padding: 6px 9px;
+  border: 1px solid var(--sb-border);
+  border-radius: var(--radius-sm);
+  background: var(--pbi-navy-deep);
+  color: var(--sb-text);
+  font-size: 12px;
+}
+
+.search-field input[type="search"]::placeholder {
+  color: var(--sb-muted);
 }
 
 /* ── Filters ── */
@@ -663,6 +709,15 @@ button, input { font: inherit; }
   background-size: 24px 24px;
 }
 
+/* G11 — wrapper escalado: edgeLayer + graphCanvas escalam juntos via
+   `transform: scale()`, mantendo o pan nativo (scroll) do .graph-frame que
+   os envolve. transform-origin 0 0 ancora a escala no canto superior-esquerdo. */
+.graph-viewport {
+  position: relative;
+  transform-origin: 0 0;
+  transition: transform 0.12s ease-out;
+}
+
 .edge-layer {
   position: absolute;
   inset: 0;
@@ -677,6 +732,61 @@ button, input { font: inherit; }
   position: relative;
   min-width: 960px;
   min-height: 680px;
+}
+
+/* ── Zoom controls (G11) — flutuam sobre o canto do .graph-frame, imunes ao
+   transform: scale() do .graph-viewport (irmão, não filho) ── */
+.zoom-controls {
+  position: absolute;
+  right: 16px;
+  bottom: 16px;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px;
+  border: 1px solid var(--line2);
+  border-radius: var(--radius-md);
+  background: var(--panel);
+  box-shadow: var(--shadow-md);
+}
+
+.zoom-btn {
+  display: grid;
+  place-items: center;
+  min-width: 28px;
+  min-height: 28px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--ink);
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  transition: background var(--transition), border-color var(--transition);
+}
+
+.zoom-btn:hover {
+  background: var(--line);
+  border-color: var(--line2);
+}
+
+.zoom-btn--fit {
+  font-size: 13px;
+  min-width: 32px;
+}
+
+.zoom-level {
+  min-width: 38px;
+  padding: 0 2px;
+  text-align: center;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--muted);
+  letter-spacing: 0.02em;
+  user-select: none;
 }
 
 /* ── Node cards ── */

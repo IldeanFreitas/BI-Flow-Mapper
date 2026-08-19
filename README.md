@@ -4,6 +4,8 @@
 
 > **Visual data lineage explorer for Power BI — runs entirely on your machine.**
 
+Free, open-source, and no installer to fight with: the Windows desktop app is a single `.exe` — no admin rights, no account, no data ever leaving your machine. One honest catch: the executable isn't code-signed yet, so Windows SmartScreen may flag it on first run (see [Security Notice](#security-notice) below — it's a one-click "Run anyway", not a dead end).
+
 BI Flow Mapper reads a `.pbix` file and draws the full pipeline from data sources through Power Query, model tables, DAX measures, calculated columns and report visuals — with impact analysis, relationship diagrams, architecture overview, pages inventory, and Word documentation export.
 
 ## 🎥 Video Demo
@@ -26,7 +28,7 @@ https://youtu.be/C-eEdELC02E
 | **Platform** | Windows 10 / 11 | Windows, macOS, Linux |
 | **Python required** | ❌ No | ✅ Yes |
 
-Both modes use the same `backend.py` server and the same `app.js` frontend — the only difference is how the window is opened and how files are saved.
+Both modes use the same `backend.py` server and the same `src/` frontend modules — the only difference is how the window is opened and how files are saved.
 
 ---
 
@@ -55,7 +57,7 @@ Both modes use the same `backend.py` server and the same `app.js` frontend — t
 ## How it works
 
 ```
-.pbix file  ──►  backend.py (pbixray)  ──►  JSON graph  ──►  app.js
+.pbix file  ──►  backend.py (pbixray)  ──►  JSON graph  ──►  src/main.js
 ```
 
 1. `backend.py` starts a local HTTP server and uses **pbixray** to extract:
@@ -65,7 +67,7 @@ Both modes use the same `backend.py` server and the same `app.js` frontend — t
    - DAX measures and calculated columns
    - Model relationships
    - Report layout (pages and visual containers)
-2. The frontend (`app.js`) builds and renders the lineage graph, relationship ERD, architecture diagram and pages list.
+2. The frontend (`src/` ES modules, entry point `src/main.js`) builds and renders the lineage graph, relationship ERD, architecture diagram and pages list.
 3. In **desktop mode**, `main_app.py` manages the server thread and opens a native WebView2 window. File exports use a JS↔Python bridge (`window.pywebview.api`) to show native Save-As dialogs.
 4. In **browser mode**, `backend.py` is started directly and the URL is opened in any browser. File exports use the browser's built-in download.
 
@@ -143,9 +145,16 @@ bi-flow-mapper/
 ├── dist/
 │   └── BI Flow Mapper.exe   # Standalone desktop app (no Python needed)
 ├── index.html               # Single-page application shell
-├── app.js                   # All frontend logic (graph, tabs, export)
+├── src/                     # Frontend ES modules (entry point: main.js)
 ├── styles.css               # UI styles
-├── backend.py               # Local HTTP server + pbixray analysis
+├── backend.py               # Local HTTP server orchestrator + entry point
+├── bi_server.py             # HTTP routing, security (Origin/allowlist), port handling
+├── pbix_analysis.py         # pbixray extraction — lineage graph, RLS/OLS, diagnostics
+├── doc_export.py            # DOCX/HTML documentation export, secret masking
+├── render_graphics.py       # ERD/architecture SVG + PNG rendering
+├── connector_matching.py    # Power Query connector detection heuristics
+├── graph_utils.py           # Shared graph/text helpers
+├── logging_setup.py         # Structured logging (bi-flow-mapper.log)
 ├── main_app.py              # Desktop launcher — pywebview window + JS↔Python bridge
 ├── connector_catalog.py     # 166 Power Query connectors (auto-generated)
 ├── requirements.txt         # Python dependencies (browser mode only)

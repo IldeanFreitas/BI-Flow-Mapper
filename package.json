@@ -1,0 +1,15 @@
+{
+  "name": "bi-flow-mapper",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Dev-only tooling for the BI Flow Mapper test suite (Vitest/jsdom). Not used by the shipped app, which has no npm runtime dependency.",
+  "type": "module",
+  "scripts": {
+    "test": "vitest run"
+  },
+  "license": "ISC",
+  "devDependencies": {
+    "jsdom": "^29.1.1",
+    "vitest": "^4.1.11"
+  }
+}

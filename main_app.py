@@ -48,7 +48,7 @@ def wait_for_health(port: int, timeout: float = 10.0) -> bool:
 class JsApi:
     """Exposed to JavaScript as window.pywebview.api.*
     
-    Methods here are called from app.js to save files via a native
+    Methods here are called from src/export.js to save files via a native
     Save-As dialog, bypassing pywebview's blocked link.click() downloads.
     """
 

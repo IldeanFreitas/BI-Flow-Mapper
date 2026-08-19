@@ -1,11 +1,37 @@
 # BI Flow Mapper — Python dependencies
-# Python 3.10+ recommended (3.8+ minimum)
+#
+# Supported: Python 3.10 – 3.13. 3.8/3.9 are not tested and not recommended.
+#
+# Python 3.14+ currently BREAKS `pip install -r requirements.txt`.
+# This is NOT a bug in this project — it's a transitive dependency problem:
+# pbixray depends on xpress9 (Microsoft compression codec), which only
+# publishes a pre-built wheel up to Python 3.13. On 3.14, pip falls back to
+# the sdist, and that sdist is missing `xpress9.pyx` from the tarball
+# published on PyPI — the build fails every time, upstream of anything here.
+#
+# Practical fix if your default `python`/`py` is already 3.14+: install a
+# supported Python side by side and create the project's virtualenv with it,
+# e.g. on Windows:
+#   py -3.12 -m venv .venv
+#   ./.venv/Scripts/python.exe -m pip install --upgrade pip
+#   ./.venv/Scripts/python.exe -m pip install -r requirements.txt
+# (If `py -3.12` isn't available: winget install --id Python.Python.3.12 -e)
+#
 # Install: pip install -r requirements.txt
 
-#python_requires>=3.8
+#python_requires>=3.10,<3.14
 
 # ── Core ──────────────────────────────────────────────────────────────────
-pbixray>=0.10.0,<2.0
+# 0.15.0 e o piso porque e a primeira versao validada neste projeto a expor
+# `model.rls`/`model.ols` (RLS/OLS -- G19 do backlog), usados por
+# build_structured_security() em backend.py. Versoes 0.10.x-0.14.x podem nao
+# ter esses atributos; o codigo degrada graciosamente (records_from()
+# captura o AttributeError e retorna lista vazia), mas o piso do requirements
+# deve refletir a versao minima testada para a feature nao ficar sempre vazia
+# em silencio.
+pbixray>=0.15.0,<2.0
+
+# python-docx: geracao do relatorio Word exportado.
 python-docx>=1.1.0,<2.0
 
 # ── Diagramas e banners no export Word ───────────────────────────────────

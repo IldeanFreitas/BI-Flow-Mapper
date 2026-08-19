@@ -6,6 +6,9 @@ bi-flow-mapper.log
 bi-flow-mapper.err.log
 bi-flow-mapper.port
 
+# Node (dev-only test tooling — Vitest/jsdom, not shipped with the app)
+node_modules/
+
 
 # Build
 build/

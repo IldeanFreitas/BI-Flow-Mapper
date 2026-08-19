@@ -1,0 +1,14 @@
+# BI Flow Mapper — dev-only dependencies (test suite)
+#
+# NÃO faz parte da distribuição ao usuário final — isso fica em
+# requirements.txt. Este arquivo é só para quem vai rodar/editar a suíte
+# pytest em tests/backend.
+#
+# Install:
+#   ./.venv/Scripts/python.exe -m pip install -r requirements-dev.txt
+#
+# Run:
+#   ./.venv/Scripts/python.exe -m pytest tests/backend -v
+
+pytest>=8.0,<10.0
+requests>=2.31,<3.0

@@ -23,7 +23,7 @@
           </div>
         </div>
 
-        <label class="upload-zone" for="pbixInput">
+        <label id="uploadZone" class="upload-zone" for="pbixInput">
           <input id="pbixInput" type="file" accept=".pbix,.pbit,.zip" />
           <span class="upload-title">Select PBIX</span>
           <span class="upload-copy">The file is analysed locally in the browser.</span>
@@ -76,6 +76,10 @@
 
         <section class="panel" aria-label="Filters">
           <h2 id="panelHeadFilters">Filters</h2>
+          <div class="search-field">
+            <label for="nodeSearchInput" id="nodeSearchLabel">Search</label>
+            <input id="nodeSearchInput" type="search" autocomplete="off" placeholder="Name, DAX or M expression…" />
+          </div>
           <div class="filter-grid" id="typeFilters"></div>
         </section>
 
@@ -95,7 +99,7 @@
 
         <section class="panel details-panel" aria-label="Details">
           <h2 id="panelHeadDetails">Details</h2>
-          <div id="nodeDetails" class="node-details">
+          <div id="nodeDetails" class="node-details" aria-live="polite">
             <p>Select a node to see its origin, dependencies and impact.</p>
           </div>
         </section>
@@ -105,7 +109,7 @@
         <header class="workspace-header">
           <div>
             <h2 id="workspaceTitle">Lineage Map</h2>
-            <p id="workspaceSubtitle">Load a PBIX or use the demo to get started.</p>
+            <p id="workspaceSubtitle" aria-live="polite">Load a PBIX or use the demo to get started.</p>
           </div>
           <div class="tab-bar" role="tablist" aria-label="Views">
             <button id="tabMapa" type="button" class="tab-button active" role="tab" aria-selected="true" aria-controls="panelMapa">Map</button>
@@ -125,11 +129,19 @@
 
         <div class="tab-panels">
         <div id="panelMapa" class="graph-frame" role="tabpanel">
-          <svg id="edgeLayer" class="edge-layer" aria-hidden="true"></svg>
-          <div id="graphCanvas" class="graph-canvas" role="list" aria-label="Graph nodes"></div>
+          <div id="graphViewport" class="graph-viewport">
+            <svg id="edgeLayer" class="edge-layer" aria-hidden="true"></svg>
+            <div id="graphCanvas" class="graph-canvas" role="list" aria-label="Graph nodes"></div>
+          </div>
           <div id="emptyState" class="empty-state">
             <strong>Start with your PBIX file</strong>
             <span>The app detects connectors, queries, tables and report signals when this information exists in the package.</span>
+          </div>
+          <div id="zoomControls" class="zoom-controls" role="group" aria-label="Zoom controls">
+            <button id="zoomOutButton" type="button" class="zoom-btn" title="Zoom out" aria-label="Zoom out">−</button>
+            <span id="zoomLevel" class="zoom-level" aria-live="polite">100%</span>
+            <button id="zoomFitButton" type="button" class="zoom-btn zoom-btn--fit" title="Fit to screen" aria-label="Fit to screen">⤢</button>
+            <button id="zoomInButton" type="button" class="zoom-btn" title="Zoom in" aria-label="Zoom in">+</button>
           </div>
         </div>
 
@@ -165,6 +177,6 @@
       </section>
     </main>
 
-    <script src="app.js"></script>
+    <script type="module" src="src/main.js"></script>
   </body>
 </html>
