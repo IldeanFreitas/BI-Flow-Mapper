@@ -29,6 +29,11 @@
           <span class="upload-copy">The file is analysed locally in the browser.</span>
         </label>
 
+        <label id="pbipFolderZone" class="pbip-folder-zone" for="pbipFolderInput">
+          <input id="pbipFolderInput" type="file" webkitdirectory directory multiple />
+          <span id="pbipFolderLabel" class="pbip-folder-label">or select a .pbip folder</span>
+        </label>
+
         <div class="toolbar" role="toolbar" aria-label="Graph actions">
           <button id="demoButton" type="button" class="tool-button" title="Load demo">
             <span class="button-icon">EX</span>
@@ -109,7 +114,10 @@
         <header class="workspace-header">
           <div>
             <h2 id="workspaceTitle">Lineage Map</h2>
-            <p id="workspaceSubtitle" aria-live="polite">Load a PBIX or use the demo to get started.</p>
+            <div class="subtitle-row">
+              <span id="loadingSpinner" class="spinner" hidden aria-hidden="true"></span>
+              <p id="workspaceSubtitle" aria-live="polite">Load a PBIX or use the demo to get started.</p>
+            </div>
           </div>
           <div class="tab-bar" role="tablist" aria-label="Views">
             <button id="tabMapa" type="button" class="tab-button active" role="tab" aria-selected="true" aria-controls="panelMapa">Map</button>

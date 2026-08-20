@@ -21,6 +21,13 @@ chamada, quando doc_export.py ja terminou de carregar havia muito tempo.
 Import circular seguro exige que ROOT/HOST/etc. (usados por doc_export.py)
 estejam definidos ANTES da linha `import doc_export` no codigo abaixo -- nao
 reordene sem entender esta nota.
+
+G17: `POST /api/analyze-tmdl` e o caminho paralelo para pastas .pbip/TMDL
+(sem pbixray, sem .pbix binario) -- mesma validacao de Origin/Content-Length
+dos demais endpoints POST, delegando o parsing/grafo para
+tmdl_analysis.analyze_tmdl_files(). tmdl_analysis.py NAO depende de
+bi_server.py (nem de doc_export.py), entao o import e direto no topo do
+arquivo, sem o truque de import adiado usado para doc_export.
 """
 from __future__ import annotations
 
@@ -74,6 +81,47 @@ STATIC_ALLOWLIST_PREFIXES = ("/image/", "/assets/", "/src/")
 
 import doc_export  # noqa: E402  (ver docstring do modulo -- ordem importa)
 from pbix_analysis import analyze_pbix  # noqa: E402
+# G17: tmdl_analysis.py nao depende de bi_server.py (nem de doc_export.py) --
+# import direto, sem risco de ciclo, mesmo padrao de `analyze_pbix` acima.
+from tmdl_analysis import TmdlAnalysisError, analyze_tmdl_files  # noqa: E402
+
+
+def split_multipart(content_type, body):
+    """Divide um corpo multipart/form-data em partes (headers_bytes,
+    payload_bytes) -- compartilhado por read_upload() (upload .pbix, campo
+    unico "pbix") e read_tmdl_uploads() (G17, N arquivos ".tmdl" no mesmo
+    campo "tmdl_files"). Levanta ValueError se o Content-Type nao tiver
+    boundary."""
+    boundary_match = re.search(r"boundary=([^;]+)", content_type)
+    if not boundary_match:
+        raise ValueError("Upload multipart sem boundary.")
+
+    boundary = ("--" + boundary_match.group(1).strip('"')).encode()
+    parts = []
+    for part in body.split(boundary):
+        if b"\r\n\r\n" not in part:
+            continue
+        headers, payload = part.split(b"\r\n\r\n", 1)
+        payload = payload.rstrip(b"\r\n-")
+        parts.append((headers, payload))
+    return parts
+
+
+def derive_tmdl_model_name(relative_paths):
+    """G17: nome de exibicao do modelo TMDL, derivado do primeiro segmento
+    de path enviado (ex.: "MeuModelo.SemanticModel/definition/tables/
+    Sales.tmdl" -> "MeuModelo"). Puramente cosmetico (vira `fileName` na
+    resposta JSON, mesmo campo que /api/analyze ja preenche a partir do
+    nome do .pbix) -- nao ha acesso a filesystem aqui, entao nao existe
+    superficie de path traversal a partir desse valor."""
+    for relative_path in relative_paths:
+        first_segment = relative_path.split("/", 1)[0]
+        for suffix in (".SemanticModel", ".Report", ".pbip"):
+            if first_segment.endswith(suffix):
+                return first_segment[: -len(suffix)] or "Modelo TMDL"
+        return first_segment or "Modelo TMDL"
+    return "Modelo TMDL"
+
 
 class Handler(SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
@@ -82,7 +130,7 @@ class Handler(SimpleHTTPRequestHandler):
     def do_POST(self):
         parsed_url = urlparse(self.path)
         request_path = parsed_url.path
-        if request_path not in {"/api/analyze", "/api/export-docx", "/api/export-html"}:
+        if request_path not in {"/api/analyze", "/api/export-docx", "/api/export-html", "/api/analyze-tmdl"}:
             self.send_json({"error": "Not found"}, status=404)
             return
 
@@ -112,6 +160,10 @@ class Handler(SimpleHTTPRequestHandler):
             return
 
         try:
+            if request_path == "/api/analyze-tmdl":
+                self.handle_analyze_tmdl()
+                return
+
             file_name, payload = self.read_upload()
             with tempfile.TemporaryDirectory(prefix="bi-flow-mapper-") as temp_dir:
                 safe_name = re.sub(r"[^A-Za-z0-9_. -]+", "_", file_name or "upload.pbix")
@@ -155,6 +207,30 @@ class Handler(SimpleHTTPRequestHandler):
             # so uma mensagem generica, ja que qualquer processo local pode
             # bater neste endpoint sem autenticacao.
             self.send_json({"error": "Falha ao processar o arquivo. Veja bi-flow-mapper.log para detalhes."}, status=500)
+
+    def handle_analyze_tmdl(self):
+        """G17: POST /api/analyze-tmdl -- caminho paralelo a /api/analyze
+        para pastas .pbip/TMDL (sem pbixray, sem .pbix binario). Chamado de
+        dentro do try/except de do_POST -- so os dois erros "esperados"
+        (nenhum .tmdl no upload, ou TmdlAnalysisError de tmdl_analysis.py)
+        viram 400 com mensagem clara aqui; qualquer outra excecao sobe e cai
+        no 500 generico de do_POST, igual aos demais endpoints.
+        """
+        tmdl_files, model_name = self.read_tmdl_uploads()
+        if not tmdl_files:
+            self.send_json({
+                "error": "Nenhum arquivo .tmdl encontrado — confirme que selecionou a pasta "
+                         ".SemanticModel ou a raiz do .pbip.",
+            }, status=400)
+            return
+        try:
+            graph = analyze_tmdl_files(tmdl_files, model_name=model_name)
+        except TmdlAnalysisError as error:
+            logger.warning("Falha ao analisar TMDL: %s", error)
+            self.send_json({"error": str(error)}, status=400)
+            return
+        graph["fileName"] = model_name
+        self.send_json(graph)
 
     def do_GET(self):
         if self.path == "/api/health":
@@ -226,18 +302,9 @@ class Handler(SimpleHTTPRequestHandler):
         if "multipart/form-data" not in content_type:
             return "upload.pbix", body
 
-        boundary_match = re.search(r"boundary=([^;]+)", content_type)
-        if not boundary_match:
-            raise ValueError("Upload multipart sem boundary.")
-
-        boundary = ("--" + boundary_match.group(1).strip('"')).encode()
-        for part in body.split(boundary):
-            if b"\r\n\r\n" not in part:
-                continue
-            headers, payload = part.split(b"\r\n\r\n", 1)
+        for headers, payload in split_multipart(content_type, body):
             if b'name="pbix"' not in headers:
                 continue
-            payload = payload.rstrip(b"\r\n-")
             filename_match = re.search(rb'filename="([^"]+)"', headers)
             filename = "upload.pbix"
             if filename_match:
@@ -245,6 +312,45 @@ class Handler(SimpleHTTPRequestHandler):
             return filename, payload
 
         raise ValueError("Campo de upload 'pbix' nao encontrado.")
+
+    def read_tmdl_uploads(self):
+        """G17: le TODAS as partes multipart chamadas "tmdl_files" (uma por
+        arquivo .tmdl da pasta .pbip/.SemanticModel selecionada no
+        frontend). O `filename` de cada parte carrega o path RELATIVO
+        dentro da pasta escolhida (barras normais -- ex.
+        "MeuModelo.SemanticModel/definition/tables/Sales.tmdl"), e e assim
+        que reconstruimos a estrutura de pastas a partir de um upload
+        multipart plano.
+
+        Filtra silenciosamente qualquer parte cujo filename NAO termine em
+        ".tmdl" (ex.: um .json de layout do .Report/ que porventura venha
+        junto no mesmo upload) -- ver contrato do endpoint no docstring de
+        tmdl_analysis.py. Os bytes nunca sao escritos em disco -- tudo fica
+        em memoria ate virar registros normalizados em
+        tmdl_analysis.parse_tmdl_model().
+
+        Devolve (lista de (caminho_relativo, bytes), nome_do_modelo).
+        """
+        content_type = self.headers.get("Content-Type", "")
+        length = int(self.headers.get("Content-Length", "0"))
+        body = self.rfile.read(length)
+
+        if "multipart/form-data" not in content_type:
+            return [], "Modelo TMDL"
+
+        files = []
+        for headers, payload in split_multipart(content_type, body):
+            if b'name="tmdl_files"' not in headers:
+                continue
+            filename_match = re.search(rb'filename="([^"]+)"', headers)
+            if not filename_match:
+                continue
+            relative_path = unquote(filename_match.group(1).decode("utf-8", errors="replace")).replace("\\", "/")
+            if not relative_path.lower().endswith(".tmdl"):
+                continue
+            files.append((relative_path, payload))
+
+        return files, derive_tmdl_model_name(path for path, _ in files)
 
     def send_json(self, payload, status=200):
         data = json.dumps(payload, ensure_ascii=False, allow_nan=False).encode("utf-8")

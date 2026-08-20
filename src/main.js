@@ -89,7 +89,7 @@ init();
 // indireção usado por spies (ver comentário em graph-render.js/zoom.js/
 // upload.js) — substituem o antigo truque de reatribuir `dom.window.fn`.
 export { state, nodeMatchesSearch, upstream, downstream, layoutGraph } from "./graph-model.js";
-export { els, setSubtitle } from "./dom-refs.js";
+export { els, setSubtitle, setLoading } from "./dom-refs.js";
 export { setLocale, applyI18n, t, locale, I18N } from "./i18n.js";
 export {
   renderGraph,
@@ -108,7 +108,7 @@ export {
   fitGraph,
   hooks as zoomHooks,
 } from "./zoom.js";
-export { loadLastPbix, loadPbix } from "./upload.js";
+export { loadLastPbix, loadPbix, loadPbipFolder, filterTmdlFiles, buildTmdlFormData } from "./upload.js";
 export { loadDemo, uploadHooks };
 export { exportGraph, exportImage, exportDocumentation } from "./export.js";
 export { renderRelationships } from "./relationships.js";

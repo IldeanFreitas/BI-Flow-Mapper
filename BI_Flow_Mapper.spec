@@ -14,6 +14,7 @@ a = Analysis(
         ('backend.py',            '.'),
         ('bi_server.py',          '.'),
         ('pbix_analysis.py',      '.'),
+        ('tmdl_analysis.py',      '.'),
         ('doc_export.py',         '.'),
         ('render_graphics.py',    '.'),
         ('logging_setup.py',      '.'),

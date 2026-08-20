@@ -19,6 +19,10 @@ Foi dividido em modulos por responsabilidade:
                                visuais, linhagem estrutural G14, objetos nao
                                usados G15, seguranca estruturada G19,
                                diagnostico G18) + analyze_pbix().
+  - tmdl_analysis.py        -- G17: caminho paralelo de analise para pastas
+                               .pbip/TMDL (sem pbixray) -- parser TMDL
+                               pragmatico + analyze_tmdl_files(), reaproveitando
+                               os build_* de pbix_analysis.py.
   - render_graphics.py      -- ERD/arquitetura em SVG e PNG (Pillow/cairosvg).
   - doc_export.py           -- build_documentation_docx/build_documentation_html
                                (G20) + os helpers build_*_rows compartilhados.
@@ -240,6 +244,12 @@ from doc_export import (  # noqa: E402
     unique_texts,
 )
 
+from tmdl_analysis import (  # noqa: E402
+    TmdlAnalysisError,
+    analyze_tmdl_files,
+    parse_tmdl_model,
+)
+
 from bi_server import (  # noqa: E402
     ASSETS_DIR,
     DEFAULT_PORT,
@@ -251,12 +261,14 @@ from bi_server import (  # noqa: E402
     STATIC_ALLOWLIST_EXACT,
     STATIC_ALLOWLIST_PREFIXES,
     Handler,
+    derive_tmdl_model_name,
     find_port,
     is_healthy,
     is_port_open,
     main,
     open_browser,
     requested_port,
+    split_multipart,
     write_port_file,
 )
 

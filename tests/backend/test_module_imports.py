@@ -39,6 +39,7 @@ MODULES = [
     "connector_matching",
     "render_graphics",
     "pbix_analysis",
+    "tmdl_analysis",
     "doc_export",
     "bi_server",
     "backend",

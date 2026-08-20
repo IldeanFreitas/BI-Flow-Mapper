@@ -4,7 +4,7 @@ Explorador visual de linhagem de dados para Power BI — 100% local (sem backend
 
 ## Squad dedicada
 
-Este projeto tem agentes e skills próprios (prefixo `biflowmapper-*`, globais em `~/.claude/`). Use `biflowmapper-architect` para orquestrar trabalho que cruza backend + frontend + testes; veja `~/.claude/agents/biflowmapper-*.md` para os especialistas individuais (backend, frontend, packaging, testes, segurança, docs) e `~/.claude/skills/biflowmapper-*` para convenções específicas (i18n, extração de PBIX, acessibilidade, build/release, testes).
+Este projeto tem agentes e skills próprios (prefixo `biflowmapper-*`, globais em `~/.claude/`). Use `biflowmapper-architect` para orquestrar trabalho que cruza backend + frontend + testes; veja `~/.claude/agents/biflowmapper-*.md` para os especialistas individuais (backend, frontend, packaging, testes, segurança, docs) e `~/.claude/skills/biflowmapper-*` para convenções específicas (`backend-modules` = mapa dos 8 módulos Python e o idioma de import adiado, `pbix-extraction`, `i18n`, `a11y-checklist`, `packaging-release`, `testing`).
 
 ## Backlog
 

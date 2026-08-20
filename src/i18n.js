@@ -24,6 +24,10 @@ export const I18N = {
     uploadTitle: "Select PBIX",
     uploadCopy: "The file is analysed locally in the browser.",
 
+    // .pbip folder upload (G17)
+    pbipFolderLabel: "or select a .pbip folder",
+    tmdlNoFilesFound: "No .tmdl files found — select the .pbip or .SemanticModel folder.",
+
     // Toolbar buttons
     btnDemo: "Demo",
     btnDemoTitle: "Load demo",
@@ -125,6 +129,10 @@ export const I18N = {
     loadingEntries: (n, extra) => `${n} entries read from PBIX package${extra}.`,
     loadingNestedExtra: (n) => ` + ${n} internal DataMashup entries`,
 
+    // .pbip/TMDL folder loading (G17)
+    loadingAnalysingTmdl: (n) => `Analysing ${n} .tmdl file${n !== 1 ? "s" : ""}…`,
+    loadingErrorTmdl: "Could not analyse the .pbip folder. See console for details.",
+
     // Export image footer
     exportTimestamp: () => new Date().toLocaleString("en-US"),
 
@@ -156,6 +164,10 @@ export const I18N = {
     uploadTitle: "Selecionar PBIX",
     uploadCopy: "O arquivo é analisado localmente no navegador.",
 
+    // Upload de pasta .pbip (G17)
+    pbipFolderLabel: "ou selecione uma pasta .pbip",
+    tmdlNoFilesFound: "Nenhum arquivo .tmdl encontrado — selecione a pasta .pbip ou .SemanticModel.",
+
     btnDemo: "Exemplo",
     btnDemoTitle: "Carregar exemplo",
     btnPbix: "PBIX",
@@ -164,11 +176,11 @@ export const I18N = {
     btnJsonTitle: "Exportar JSON",
     btnPng: "Exportar imagem",
     btnPngTitle: "Exportar imagem PNG",
-    btnDocx: "Exportar documentacao",
-    btnDocxTitle: "Exportar documentacao Word",
-    docxNoPbix: "Carregue um arquivo PBIX antes de exportar a documentacao.",
-    docxGenerating: "Gerando documentacao...",
-    docxError: "Nao foi possivel exportar a documentacao. Veja o console para detalhes.",
+    btnDocx: "Exportar documentação",
+    btnDocxTitle: "Exportar documentação Word",
+    docxNoPbix: "Carregue um arquivo PBIX antes de exportar a documentação.",
+    docxGenerating: "Gerando documentação...",
+    docxError: "Não foi possível exportar a documentação. Veja o console para detalhes.",
 
     panelSummary: "Resumo",
     metricSources: "Fontes",
@@ -245,6 +257,10 @@ export const I18N = {
     loadingEntries: (n, extra) => `${n} entradas lidas do pacote PBIX${extra}.`,
     loadingNestedExtra: (n) => ` + ${n} entradas internas do DataMashup`,
 
+    // Carregamento de pasta .pbip/TMDL (G17)
+    loadingAnalysingTmdl: (n) => `Analisando ${n} arquivo${n !== 1 ? "s" : ""} .tmdl…`,
+    loadingErrorTmdl: "Não foi possível analisar a pasta .pbip. Veja o console para detalhes.",
+
     exportTimestamp: () => new Date().toLocaleString("pt-BR"),
 
     demoTitle: "Demo Linhagem",
@@ -297,6 +313,9 @@ export function applyI18n() {
   // Upload zone
   document.querySelector(".upload-title").textContent          = T.uploadTitle;
   document.querySelector(".upload-copy").textContent           = T.uploadCopy;
+
+  // .pbip folder upload (G17)
+  if (els.pbipFolderLabel) els.pbipFolderLabel.textContent = T.pbipFolderLabel;
 
   // Toolbar
   els.demoButton.title = T.btnDemoTitle;

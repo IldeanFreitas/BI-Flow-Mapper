@@ -258,6 +258,40 @@ button, input { font: inherit; }
   margin: 0 !important;
 }
 
+/* ── .pbip folder upload (G17) ── */
+
+.pbip-folder-zone {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 6px 8px;
+  margin-top: -2px;
+  cursor: pointer;
+}
+
+.pbip-folder-zone input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.pbip-folder-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--sb-muted);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  transition: color var(--transition);
+}
+
+.pbip-folder-zone:hover .pbip-folder-label,
+.pbip-folder-zone:focus-within .pbip-folder-label {
+  color: var(--pbi-gold);
+}
+
 /* ── Toolbar ── */
 
 .toolbar {
@@ -617,6 +651,43 @@ button, input { font: inherit; }
   margin: 1px 0 0;
   font-size: 11px;
   color: var(--muted);
+}
+
+/* ── G23 — indicador de progresso ── */
+
+.subtitle-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.subtitle-row #workspaceSubtitle {
+  margin-top: 0;
+}
+
+.spinner {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  flex: none;
+  border: 2px solid var(--line2);
+  border-top-color: var(--pbi-blue);
+  border-radius: 50%;
+  animation: bifm-spin 0.7s linear infinite;
+}
+
+.spinner[hidden] {
+  display: none;
+}
+
+@keyframes bifm-spin {
+  to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spinner {
+    animation-duration: 2.2s;
+  }
 }
 
 /* ── Tab bar ── */

@@ -12,6 +12,10 @@
 export const els = {
   input: document.getElementById("pbixInput"),
   uploadZone: document.getElementById("uploadZone"),
+  pbipFolderInput: document.getElementById("pbipFolderInput"),   // G17 — seleção de pasta .pbip/.SemanticModel
+  pbipFolderZone: document.getElementById("pbipFolderZone"),
+  pbipFolderLabel: document.getElementById("pbipFolderLabel"),
+  loadingSpinner: document.getElementById("loadingSpinner"),     // G23 — indicador de progresso durante análise
   demoButton: document.getElementById("demoButton"),
   pbixButton: document.getElementById("pbixButton"),
   exportButton: document.getElementById("exportButton"),
@@ -59,4 +63,13 @@ export const els = {
 export function setSubtitle(text) {
   els.subtitle.textContent = text;
   els.subtitle.hidden = !text;
+}
+
+// G23 — spinner visual junto de #workspaceSubtitle. Independente de
+// setSubtitle(): o texto continua sendo o anúncio real para leitor de tela
+// (aria-live="polite", já coberto pelo G8), o spinner é só reforço visual
+// para quem está olhando a tela durante uma análise demorada.
+export function setLoading(isLoading) {
+  if (!els.loadingSpinner) return;
+  els.loadingSpinner.hidden = !isLoading;
 }
