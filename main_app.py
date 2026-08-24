@@ -1,5 +1,6 @@
 # main_app.py
 import base64
+import html
 import sys
 from pathlib import Path
 
@@ -16,6 +17,12 @@ import urllib.request
 import webview
 from http.server import ThreadingHTTPServer
 from backend import find_port, Handler, write_port_file, HOST
+
+
+def startup_error_html(error_trace: str) -> str:
+    """Renderiza diagnostico local sem interpretar o traceback como HTML."""
+    safe_trace = html.escape(error_trace, quote=False)
+    return f"<pre style='color:red;padding:2em'>{safe_trace}</pre>"
 
 
 def wait_for_port(port: int, timeout: float = 15.0) -> bool:
@@ -119,7 +126,7 @@ if __name__ == "__main__":
     if port_holder["error"]:
         webview.create_window(
             "BI Flow Mapper — Erro",
-            html=f"<pre style='color:red;padding:2em'>{port_holder['error']}</pre>",
+            html=startup_error_html(port_holder["error"]),
             width=800, height=400,
         )
         webview.start()

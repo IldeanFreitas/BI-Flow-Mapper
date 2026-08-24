@@ -34,22 +34,52 @@ export function exportGraph() {
 }
 
 export async function exportDocumentation() {
-  const T = t();
+  return exportServerDocumentation({
+    endpoint: "/api/export-docx",
+    button: els.exportDocxButton,
+    extension: "docx",
+    mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    unavailableMessage: t().docxNoPbix,
+    generatingMessage: t().docxGenerating,
+    errorMessage: t().docxError,
+    defaultButtonLabel: t().btnDocx,
+    filenameSuffix: locale === "pt-BR" ? "documentacao" : "documentation"
+  });
+}
+
+export async function exportHtmlDocumentation() {
+  return exportServerDocumentation({
+    endpoint: "/api/export-html",
+    button: els.exportHtmlButton,
+    extension: "html",
+    mimeType: "text/html",
+    unavailableMessage: t().htmlNoPbix,
+    generatingMessage: t().htmlGenerating,
+    errorMessage: t().htmlError,
+    defaultButtonLabel: t().btnHtml,
+    filenameSuffix: locale === "pt-BR" ? "documentacao" : "documentation"
+  });
+}
+
+async function exportServerDocumentation({
+  endpoint, button, extension, mimeType, unavailableMessage,
+  generatingMessage, errorMessage, defaultButtonLabel, filenameSuffix
+}) {
   if (!state.lastPbixFile) {
-    alert(T.docxNoPbix);
+    alert(unavailableMessage);
     return;
   }
 
-  const buttonText = els.exportDocxButton.querySelector(".btn-text");
+  const buttonText = button.querySelector(".btn-text");
   const previousText = buttonText.textContent;
-  els.exportDocxButton.disabled = true;
-  buttonText.textContent = T.docxGenerating;
+  button.disabled = true;
+  buttonText.textContent = generatingMessage;
 
   const form = new FormData();
   form.append("pbix", state.lastPbixFile, state.lastPbixFile.name);
 
   try {
-    const response = await fetch("/api/export-docx", {
+    const response = await fetch(endpoint, {
       method: "POST",
       headers: {
         "X-BIFM-Locale": locale
@@ -64,7 +94,7 @@ export async function exportDocumentation() {
     const blob = await response.blob();
     const suggestedName =
       filenameFromDisposition(response.headers.get("Content-Disposition")) ||
-      `${slug(state.lastPbixFile.name.replace(/\.[^.]+$/, ""))}_${locale === "pt-BR" ? "documentacao" : "documentation"}.docx`;
+      `${slug(state.lastPbixFile.name.replace(/\.[^.]+$/, ""))}_${filenameSuffix}.${extension}`;
 
     // pywebview blocks link.click() — use the Python bridge when available
     if (window.pywebview && window.pywebview.api && window.pywebview.api.save_file) {
@@ -77,7 +107,7 @@ export async function exportDocumentation() {
       const result = await window.pywebview.api.save_file(
         b64,
         suggestedName,
-        "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        mimeType
       );
       if (result && !result.ok && result.reason !== "cancelled") {
         throw new Error(result.reason);
@@ -94,10 +124,10 @@ export async function exportDocumentation() {
     URL.revokeObjectURL(url);
   } catch (error) {
     console.error(error);
-    alert(T.docxError);
+    alert(errorMessage);
   } finally {
-    els.exportDocxButton.disabled = false;
-    buttonText.textContent = previousText || T.btnDocx;
+    button.disabled = false;
+    buttonText.textContent = previousText || defaultButtonLabel;
   }
 }
 

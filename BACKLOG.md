@@ -57,3 +57,92 @@ Legenda: `[ ]` pendente · `[x]` feito e testado · `[~]` parcial (motivo anotad
 
 ---
 Depois de cada fase, `biflowmapper-security-reviewer` audita o que mudou antes de marcar a fase como fechada.
+
+## Fase 5 — Evolução orientada por evidências (2026-08-24)
+
+Origem: avaliação técnica, benchmark e refatoração de 2026-08-24. Prioridades
+usam impacto × esforço; todo item novo deve preservar o processamento 100% local.
+
+### Concluído nesta rodada
+
+- [x] **G25** — Exportação HTML disponível na interface. O botão reutiliza o
+  endpoint `/api/export-html`, o locale e o fluxo de download/Save As do DOCX,
+  sem duplicar a implementação em `src/export.js`. Cobertura:
+  `tests/frontend/export-html.test.js`.
+- [x] **G26** — README alinhado ao produto: export HTML documentado, requisito
+  de Python corrigido para 3.10–3.13 e roadmap passa a descrever a futura tela
+  de diagnósticos, em vez de declarar como futura uma exportação já entregue.
+- [x] **G30** — Travessia de grafo otimizada. `buildGraphIndex()` cria
+  adjacências de entrada/saída e índice de nós; seleção, detalhes e filtro de
+  linhagem os reutilizam. Benchmark sintético local de 1.000 nós: mediana de
+  19,611 ms → 0,191 ms (102,7×). Cobertura:
+  `tests/frontend/graph-model.test.js`.
+- [x] **G31** — Correções de acessibilidade P0: tabs com setas/Home/End e
+  roving tabindex; radiogroup de idioma navegável; foco preservado após
+  re-render do card; canvas com semântica de grupo interativo; foco visível no
+  upload. Cobertura: `tests/frontend/accessibility.test.js`.
+
+**Validação da rodada:** 195 pytest + 90 Vitest = **285 testes aprovados**.
+
+### P0 — Próximo ciclo (alto impacto)
+
+- [x] **G24** — Aba **Insights** expõe `diagnostics`, `securityRoles` e
+  `unusedObjects` já devolvidos pelo backend.
+  - Entregue: três blocos visíveis para PBIX; TMDL exibe “indisponível” onde
+    não há `.Report`/VertiPaq, nunca zero enganoso; i18n EN/PT-BR; testes de
+    integração em `tests/frontend/insights.test.js`.
+  - Métrica atingida: 3 superfícies de dados antes invisíveis agora acessíveis.
+- [x] **G27** — Proveniência das arestas (`linkType` estrutural ou heurístico)
+  exibida no mapa e no painel de detalhe.
+  - Entregue: legenda textual, linha sólida verde para evidência estrutural,
+    linha tracejada laranja para inferência heurística, rótulos nos detalhes e
+    i18n EN/PT-BR. Cobertura: `tests/frontend/lineage-confidence.test.js`.
+  - Critério atendido: toda aresta que recebe `linkType` do backend apresenta
+    sua confiabilidade no mapa e no detalhe do nó conectado.
+
+### P1 — Robustez, confiança e distribuição
+
+- [x] **G32** — Limitar pressão de memória do upload local: leitura em blocos
+  para `SpooledTemporaryFile` (8 MB em memória), teto padrão configurável de
+  100 MB, validação do container ZIP e semáforo de duas análises com timeout.
+  - Critérios atendidos: cobertura de spool/tamanho, ZIP inválido e razão de
+    compressão, concorrência com `429` e limpeza do diretório temporário em
+    `tests/backend/test_upload_safety.py`; nenhuma requisição acima do limite
+    configurado é lida.
+- [x] **G33** — Cabeçalhos defensivos centralizados no `end_headers()` do
+  servidor: `nosniff`, CSP local, `DENY` para frame, política de referrer e
+  permissões de câmera/localização/microfone bloqueadas. O traceback do
+  launcher agora passa por `html.escape()`.
+  - Critérios atendidos: respostas estáticas, API e 404 verificadas, além de
+    regressão para traceback contendo HTML em
+    `tests/backend/test_security_headers.py`.
+- [x] **G34** — Removida a importação do Google Fonts; `--font-ui` usa a
+  pilha nativa Segoe UI/sistema. A CSP do G33 também limita estilos, scripts,
+  fontes e conexões a `'self'`.
+  - Critérios atendidos: `tests/frontend/styles.test.js` garante ausência de
+    URL de fonte remota e presença do token local; fallback preserva a
+    tipografia e o contraste existentes.
+- [~] **G1** — Assinatura Authenticode permanece dependente de ação manual do
+  mantenedor (SignPath/Azure Trusted Signing). Quando houver credencial, criar
+  job Windows de build, assinatura, hash/SBOM e smoke test do executável.
+
+### P2 — Qualidade contínua e aprendizado
+
+- [x] **G28** — CI expandido com lint fatal Python, cobertura e JUnit para
+  pytest/Vitest, upload de artefatos e job separado de build Windows. O lock
+  de 45 dependências para Python 3.12/Windows é fixado em
+  `requirements.lock` e verificado por SHA-256 antes do empacotamento.
+  - Critérios atendidos: `scripts/verify_requirements_lock.py`,
+    `npm run test:cov` e PyInstaller validados localmente; workflow em
+    `.github/workflows/tests.yml` publica os relatórios e o `.exe`.
+- [x] **G29** — Instrumentação local e opt-in. Backend só coleta com
+  `BIFM_LOCAL_METRICS=1`, em memória e limitado a 200 amostras; frontend só
+  coleta após chave explícita no `localStorage`. As amostras trazem duração,
+  contagens, cobertura estrutural/heurística e falhas — sem nomes, expressões,
+  conexões ou envio de rede.
+  - Critérios atendidos: `/api/metrics` local, mediana/p95 backend e amostras
+    de render/seleção frontend; cobertura em
+    `tests/backend/test_local_metrics.py` e
+    `tests/frontend/local-metrics.test.js`.
+  - Baseline a coletar: PBIX/PBIP representativos de 50, 250 e 1.000 nós;
+    mediana/p95 de análise, render e seleção.

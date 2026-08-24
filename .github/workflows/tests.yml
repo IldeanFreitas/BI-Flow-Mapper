@@ -4,9 +4,12 @@ on:
   push:
   pull_request:
 
+permissions:
+  contents: read
+
 jobs:
   backend:
-    name: Backend (pytest)
+    name: Backend (lint, pytest, coverage)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -24,8 +27,23 @@ jobs:
           pip install -r requirements.txt
           pip install -r requirements-dev.txt
 
-      - name: Run pytest
-        run: pytest tests/backend -v
+      - name: Lint fatal Python errors
+        run: python -m ruff check --select=E9,F63,F7,F82 .
+
+      - name: Run pytest with coverage and JUnit
+        run: >
+          pytest tests/backend -v
+          --junitxml=artifacts/pytest-junit.xml
+          --cov=.
+          --cov-report=xml:artifacts/coverage-python.xml
+
+      - name: Upload backend reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-reports
+          path: artifacts/
+          if-no-files-found: error
 
   frontend:
     name: Frontend (vitest)
@@ -42,5 +60,43 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Run vitest
-        run: npx vitest run
+      - name: Run vitest with coverage and JUnit
+        run: npm run test:cov
+
+      - name: Upload frontend reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-reports
+          path: artifacts/
+          if-no-files-found: error
+
+  windows-build:
+    name: Windows package build
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Verify the dependency lock
+        run: python scripts/verify_requirements_lock.py
+
+      - name: Install locked build dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.lock
+          python -m pip check
+
+      - name: Build executable
+        run: pyinstaller --noconfirm BI_Flow_Mapper.spec
+
+      - name: Upload Windows executable
+        uses: actions/upload-artifact@v4
+        with:
+          name: BI-Flow-Mapper-windows
+          path: dist/BI Flow Mapper.exe
+          if-no-files-found: error

@@ -14,6 +14,7 @@ import { renderFilters, renderGraph } from "./graph-render.js";
 import { renderRelationships } from "./relationships.js";
 import { renderArchitecture } from "./architecture.js";
 import { renderPages } from "./pages.js";
+import { renderInsights } from "./insights.js";
 
 export const I18N = {
   "en-US": {
@@ -42,6 +43,11 @@ export const I18N = {
     docxNoPbix: "Load a PBIX file before exporting documentation.",
     docxGenerating: "Generating documentation...",
     docxError: "Could not export the documentation. See console for details.",
+    btnHtml: "Export HTML",
+    btnHtmlTitle: "Export HTML documentation",
+    htmlNoPbix: "Load a PBIX file before exporting documentation.",
+    htmlGenerating: "Generating HTML documentation...",
+    htmlError: "Could not export the HTML documentation. See console for details.",
 
     // Summary panel
     panelSummary: "Summary",
@@ -73,6 +79,7 @@ export const I18N = {
     tabRelationships: "Relationships",
     tabArchitecture: "Architecture",
     tabPages: "Pages",
+    tabInsights: "Insights",
 
     // Legend
     legendSource: "Source",
@@ -81,6 +88,7 @@ export const I18N = {
     legendMeasure: "Measure",
     legendCalcColumn: "Calc. Column",
     legendVisual: "Visual",
+    lineageConfidenceLegend: "Visual lineage: solid = structural · dashed = heuristic",
     // Empty states
     emptyTitle: "Start with your PBIX file",
     emptyBody: "The app detects connectors, queries, tables and report signals when this information exists in the package.",
@@ -93,6 +101,30 @@ export const I18N = {
     pagesEmptyBody: "Load a PBIX file to see the report pages.",
     pagesVisualsLabel: (n) => `${n} visual${n !== 1 ? "s" : ""}`,
     pagesCanvasLabel: (w, h) => `${w} × ${h} px`,
+    insightsEmptyTitle: "Technical insights are not available",
+    insightsEmptyBody: "Load a PBIX or PBIP model analysed by the local backend to inspect diagnostics and security metadata.",
+    insightsModelSize: "Model size",
+    insightsProfiledTables: "Profiled tables",
+    insightsSecurityRoles: "Security roles",
+    insightsUnusedCount: "Unused objects",
+    insightsUnavailable: "Unavailable",
+    insightsStorage: "Storage diagnostics",
+    insightsStorageEmpty: "No storage profile was returned for this model.",
+    insightsStorageUnavailable: "Storage diagnostics require VertiPaq metadata from a PBIX file and are not available for TMDL-only analysis.",
+    insightsTable: "Table",
+    insightsColumns: "Columns",
+    insightsSize: "Size",
+    insightsUnused: "Unused measures and calculated columns",
+    insightsUnusedNone: "No unused measures or calculated columns were found.",
+    insightsUnusedUnavailable: "Unused-object analysis requires report visual metadata and is not available for TMDL-only analysis.",
+    insightsUnusedHint: "Review before removal: dependencies inferred from DAX can be incomplete.",
+    insightsNoTable: "No table",
+    insightsMeasure: "Measure",
+    insightsCalcColumn: "Calculated column",
+    insightsSecurity: "Row and object security",
+    insightsSecurityNone: "No RLS or OLS roles were found.",
+    insightsRowFilters: "row filters",
+    insightsObjectPermissions: "object permissions",
     archPbiLabel: "Power BI Dataset",
     archNoQueries: "No queries mapped",
     archSourcesCount: (n) => `${n} data source${n !== 1 ? "s" : ""} connected`,
@@ -109,6 +141,9 @@ export const I18N = {
     detailsDirectDeps: "Direct dependencies:",
     detailsImpacted: "Impacted nodes:",
     detailsAffects: "Affects:",
+    detailsLineageConfidence: "Visual lineage confidence:",
+    linkTypeStructural: "Structural evidence",
+    linkTypeHeuristic: "Heuristic inference",
 
     // Relationship table headers
     relFromTable: "Source Table",
@@ -181,6 +216,11 @@ export const I18N = {
     docxNoPbix: "Carregue um arquivo PBIX antes de exportar a documentação.",
     docxGenerating: "Gerando documentação...",
     docxError: "Não foi possível exportar a documentação. Veja o console para detalhes.",
+    btnHtml: "Exportar HTML",
+    btnHtmlTitle: "Exportar documentação HTML",
+    htmlNoPbix: "Carregue um arquivo PBIX antes de exportar a documentação.",
+    htmlGenerating: "Gerando documentação HTML...",
+    htmlError: "Não foi possível exportar a documentação HTML. Veja o console para detalhes.",
 
     panelSummary: "Resumo",
     metricSources: "Fontes",
@@ -206,6 +246,7 @@ export const I18N = {
     tabRelationships: "Relacionamentos",
     tabArchitecture: "Arquitetura",
     tabPages: "Páginas",
+    tabInsights: "Insights",
 
     legendSource: "Fonte",
     legendQuery: "Query",
@@ -213,6 +254,7 @@ export const I18N = {
     legendMeasure: "Medida",
     legendCalcColumn: "Col. Calculada",
     legendVisual: "Visual",
+    lineageConfidenceLegend: "Linhagem visual: contínua = estrutural · tracejada = heurística",
 
     emptyTitle: "Comece pelo arquivo PBIX",
     emptyBody: "O app detecta conectores, queries, tabelas e sinais de relatório quando essas informações existem no pacote.",
@@ -225,6 +267,30 @@ export const I18N = {
     pagesEmptyBody: "Carregue um arquivo PBIX para ver as páginas do relatório.",
     pagesVisualsLabel: (n) => `${n} visual${n !== 1 ? "is" : ""}`,
     pagesCanvasLabel: (w, h) => `${w} × ${h} px`,
+    insightsEmptyTitle: "Insights técnicos indisponíveis",
+    insightsEmptyBody: "Carregue um modelo PBIX ou PBIP analisado pelo backend local para inspecionar diagnósticos e metadados de segurança.",
+    insightsModelSize: "Tamanho do modelo",
+    insightsProfiledTables: "Tabelas analisadas",
+    insightsSecurityRoles: "Papéis de segurança",
+    insightsUnusedCount: "Objetos não usados",
+    insightsUnavailable: "Indisponível",
+    insightsStorage: "Diagnósticos de armazenamento",
+    insightsStorageEmpty: "Nenhum perfil de armazenamento foi retornado para este modelo.",
+    insightsStorageUnavailable: "Diagnósticos de armazenamento exigem metadados VertiPaq de um arquivo PBIX e não estão disponíveis na análise somente TMDL.",
+    insightsTable: "Tabela",
+    insightsColumns: "Colunas",
+    insightsSize: "Tamanho",
+    insightsUnused: "Medidas e colunas calculadas não usadas",
+    insightsUnusedNone: "Nenhuma medida ou coluna calculada não usada foi encontrada.",
+    insightsUnusedUnavailable: "A análise de objetos não usados exige metadados de visuais do relatório e não está disponível na análise somente TMDL.",
+    insightsUnusedHint: "Revise antes de remover: dependências inferidas de DAX podem estar incompletas.",
+    insightsNoTable: "Sem tabela",
+    insightsMeasure: "Medida",
+    insightsCalcColumn: "Coluna calculada",
+    insightsSecurity: "Segurança de linha e objeto",
+    insightsSecurityNone: "Nenhum papel RLS ou OLS foi encontrado.",
+    insightsRowFilters: "filtros de linha",
+    insightsObjectPermissions: "permissões de objeto",
     archPbiLabel: "Dataset Power BI",
     archNoQueries: "Nenhuma query mapeada",
     archSourcesCount: (n) => `${n} fonte${n !== 1 ? "s" : ""} de dados conectada${n !== 1 ? "s" : ""}`,
@@ -239,6 +305,9 @@ export const I18N = {
     detailsDirectDeps: "Dependências diretas:",
     detailsImpacted: "Nós impactados:",
     detailsAffects: "Afeta:",
+    detailsLineageConfidence: "Confiabilidade da linhagem visual:",
+    linkTypeStructural: "Evidência estrutural",
+    linkTypeHeuristic: "Inferência heurística",
 
     relFromTable: "Tabela Origem",
     relFromCol: "Coluna Origem",
@@ -302,6 +371,7 @@ export function setLocale(newLocale) {
   if (state.activeTab === "relacionamentos") renderRelationships();
   if (state.activeTab === "arquitetura") renderArchitecture();
   if (state.activeTab === "paginas") renderPages();
+  if (state.activeTab === "insights") renderInsights();
 }
 
 export function applyI18n() {
@@ -328,6 +398,8 @@ export function applyI18n() {
   els.exportImageButton.querySelector(".btn-text").textContent = T.btnPng;
   els.exportDocxButton.title = T.btnDocxTitle;
   els.exportDocxButton.querySelector(".btn-text").textContent  = T.btnDocx;
+  els.exportHtmlButton.title = T.btnHtmlTitle;
+  els.exportHtmlButton.querySelector(".btn-text").textContent  = T.btnHtml;
 
   // Panels headings
   document.getElementById("panelHeadSummary").textContent      = T.panelSummary;
@@ -370,6 +442,7 @@ export function applyI18n() {
   els.tabRelacionamentos.textContent  = T.tabRelationships;
   els.tabArquitetura.textContent      = T.tabArchitecture;
   els.tabPaginas.textContent          = T.tabPages;
+  els.tabInsights.textContent         = T.tabInsights;
 
   const pagesEmptyStrong = els.pagesEmpty.querySelector("strong");
   const pagesEmptySpan   = els.pagesEmpty.querySelector("span");
@@ -379,11 +452,12 @@ export function applyI18n() {
   // Legend
   const legendSpans = els.mapLegend.querySelectorAll("span");
   const legendKeys  = ["legendSource","legendQuery","legendModel","legendMeasure","legendVisual"];
-  legendSpans.forEach((span, i) => {
+  Array.from(legendSpans).slice(0, legendKeys.length).forEach((span, i) => {
     const dot = span.querySelector("i");
     span.textContent = " " + T[legendKeys[i]];
     span.prepend(dot);
   });
+  if (els.lineageConfidenceLegend) els.lineageConfidenceLegend.textContent = T.lineageConfidenceLegend;
 
   // Empty states
   const emptyStrong = els.emptyState.querySelector("strong");
@@ -401,6 +475,11 @@ export function applyI18n() {
   if (archEmptyStrong) archEmptyStrong.textContent = T.archEmptyTitle;
   if (archEmptySpan)   archEmptySpan.textContent   = T.archEmptyBody;
 
+  const insightsEmptyStrong = els.insightsEmpty.querySelector("strong");
+  const insightsEmptySpan   = els.insightsEmpty.querySelector("span");
+  if (insightsEmptyStrong) insightsEmptyStrong.textContent = T.insightsEmptyTitle;
+  if (insightsEmptySpan)   insightsEmptySpan.textContent   = T.insightsEmptyBody;
+
   // Search field (G10)
   const searchLabelEl = document.getElementById("nodeSearchLabel");
   if (searchLabelEl)   searchLabelEl.textContent   = T.filterSearchLabel;
@@ -414,7 +493,9 @@ export function applyI18n() {
 
   // Lang toggle button state
   document.querySelectorAll(".lang-btn").forEach((btn) => {
-    btn.classList.toggle("active", btn.dataset.lang === locale);
+    const isActive = btn.dataset.lang === locale;
+    btn.classList.toggle("active", isActive);
+    btn.setAttribute("aria-checked", isActive ? "true" : "false");
   });
 }
 

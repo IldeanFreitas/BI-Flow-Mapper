@@ -13,6 +13,15 @@ export default defineConfig({
         pretendToBeVisual: true
       }
     },
-    include: ["tests/frontend/**/*.test.js"]
+    include: ["tests/frontend/**/*.test.js"],
+    reporters: ["default", "junit"],
+    outputFile: {
+      junit: "artifacts/vitest-junit.xml"
+    },
+    coverage: {
+      provider: "v8",
+      reporter: ["text", "json", "lcov"],
+      reportsDirectory: "artifacts/coverage-frontend"
+    }
   }
 });

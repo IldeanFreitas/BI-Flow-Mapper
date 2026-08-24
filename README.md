@@ -42,14 +42,15 @@ Both modes use the same `backend.py` server and the same `src/` frontend modules
 
 ## Features
 
-- 🔗 **End-to-end lineage graph** — Source → Query → Table → Measure / Calc. Column → Visual
+- 🔗 **End-to-end lineage graph** — Source → Query → Table → Measure / Calc. Column → Visual, with structural-versus-heuristic confidence for visual links
 - 🔍 **Impact analysis** — click any node to highlight upstream dependencies and downstream impact
 - 🗂️ **Relationship diagram** — interactive ERD with cardinality, cross-filter direction and active/inactive state
 - 🏗️ **Architecture view** — connector cards wired to the Power BI dataset node with connection paths
 - 📄 **Pages inventory** — lists all report pages with visual count and canvas dimensions
 - 🔌 **166 Power Query connectors** detected automatically from M expressions and `TMSCHEMA_DATASOURCES`
 - 🔎 **Lineage filter** — toggle to show only the lineage of a selected node
-- 📤 **Export** — PNG image for every tab (Map, Relationships, Architecture, Pages), JSON graph, and Word (.docx) documentation
+- 💡 **Technical insights** — model storage profile, unused measures/calculated columns, and RLS/OLS roles when metadata is available
+- 📤 **Export** — PNG image for every tab (Map, Relationships, Architecture, Pages), JSON graph, and Word (.docx) or self-contained HTML documentation
 - 🌐 **EN / PT-BR** interface
 
 ---
@@ -106,7 +107,7 @@ This can happen because the executable is not code-signed.
 
 | Requirement | Version |
 |-------------|---------|
-| Python | **3.8+** (3.10+ recommended) |
+| Python | **3.10–3.13** |
 | pip | any recent version |
 
 **Install dependencies:**
@@ -132,9 +133,55 @@ Then open `http://127.0.0.1:4173` (or whichever port was printed) in your browse
 
 File exports use the **browser's built-in download**.
 
+### 📦 Offline package for VS Code (Windows)
+
+For restricted corporate machines, generate the Windows offline package on a
+connected build machine:
+
+```powershell
+.\scripts\build-offline-package.ps1
+```
+
+It creates `artifacts/offline-output/BI-Flow-Mapper-Offline-win-x64.zip` with the project,
+all pre-downloaded Python wheels, `Setup-Offline.ps1`, and a SHA-256 checksum.
+On the destination machine, **CPython 3.12 x64 must already be installed**;
+then extract the ZIP and run `Setup-Offline.ps1`. The setup uses
+`pip --no-index` and never downloads packages. See `README-OFFLINE.md` inside
+the generated package for the complete procedure.
+
 ---
 
 Then drag and drop (or click **Select PBIX**) any `.pbix`, `.pbit` or `.zip` file.
+
+### Local upload limits
+
+The local server accepts PBIX uploads up to **100 MB** by default, stages them
+in a temporary spool (8 MB kept in memory) and processes at most two analyses
+at a time. This keeps accidental parallel uploads from exhausting the desktop
+process. Before starting `backend.py`, these environment variables can be
+adjusted for controlled environments: `BIFM_MAX_UPLOAD_MB`,
+`BIFM_SPOOL_MAX_MEMORY_MB`, `BIFM_MAX_CONCURRENT_ANALYSES` and
+`BIFM_ANALYSIS_QUEUE_TIMEOUT_SECONDS`. PBIX files are checked as ZIP
+containers before analysis; malformed archives are rejected locally.
+
+### Optional local performance metrics
+
+Performance metrics are **off by default** and never leave the machine. To
+measure PBIX/PBIP analysis in a controlled session, start the server with
+`BIFM_LOCAL_METRICS=1`; `GET /api/metrics` then exposes up to 200 in-memory
+samples with duration, node/edge counts, structural-versus-heuristic visual
+link coverage, and failures. No file name, expression, connection string or
+model data is retained.
+
+For browser-side render and selection timing, explicitly enable the local
+browser store in DevTools:
+
+```js
+localStorage.setItem("bifm.localMetrics.enabled", "true")
+```
+
+This stores the same bounded, aggregate-only samples in that browser profile;
+clear it with `localStorage.removeItem("bifm.localMetrics.samples")`.
 
 ---
 
@@ -155,9 +202,12 @@ bi-flow-mapper/
 ├── connector_matching.py    # Power Query connector detection heuristics
 ├── graph_utils.py           # Shared graph/text helpers
 ├── logging_setup.py         # Structured logging (bi-flow-mapper.log)
+├── local_metrics.py         # Optional in-memory analysis metrics (off by default)
 ├── main_app.py              # Desktop launcher — pywebview window + JS↔Python bridge
 ├── connector_catalog.py     # 166 Power Query connectors (auto-generated)
-├── requirements.txt         # Python dependencies (browser mode only)
+├── requirements.txt         # Python dependencies needed at runtime
+├── requirements-build.txt   # PyInstaller, used only to generate the .exe
+├── requirements-runtime.lock # Exact Windows/Python 3.12 offline runtime
 ├── launch.ps1               # PowerShell launcher (called by the .vbs)
 ├── BI Flow Mapper.vbs       # One-click Windows launcher (browser mode)
 ├── bi-flow-mapper.port      # Runtime port file (auto-created, git-ignored)
@@ -229,9 +279,8 @@ If this project is useful to you, please consider visiting these projects, starr
 
 ## Roadmap
 
-1. Exact field-level dependencies between columns and visuals
-2. Technical diagnostics screen (model size, column cardinality, storage stats)
-3. HTML / PDF documentation export
+1. Exact field-level dependencies between columns and visuals, including custom visuals and PBIR reports
+2. PDF documentation export
 
 ---
 

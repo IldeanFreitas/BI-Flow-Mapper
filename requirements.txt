@@ -1,4 +1,4 @@
-# BI Flow Mapper — Python dependencies
+# BI Flow Mapper — dependencias de execucao
 #
 # Supported: Python 3.10 – 3.13. 3.8/3.9 are not tested and not recommended.
 #
@@ -18,6 +18,9 @@
 # (If `py -3.12` isn't available: winget install --id Python.Python.3.12 -e)
 #
 # Install: pip install -r requirements.txt
+#
+# Para gerar o executavel, instale tambem requirements-build.txt. O separador
+# impede que usuarios do projeto baixem ferramentas de empacotamento sem uso.
 
 #python_requires>=3.10,<3.14
 
@@ -49,8 +52,3 @@ Pillow>=9.0.0
 # thread interna. A ponte JS↔Python (window.pywebview.api) é usada para os
 # diálogos nativos de Salvar Arquivo (PNG, DOCX, JSON).
 pywebview>=5.0
-
-# ── Empacotamento ─────────────────────────────────────────────────────────
-# PyInstaller: gera o executável .exe único distribuível.
-# Só é necessário para quem vai gerar o build — não para rodar em dev.
-pyinstaller>=6.0

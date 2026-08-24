@@ -16,6 +16,7 @@ import logging
 import requests
 
 from backend import LOG_FILE, logger
+from _pbix_fixtures import make_empty_pbix_bytes
 
 
 def test_log_file_exists_after_backend_import():
@@ -34,15 +35,21 @@ def test_logger_is_a_named_non_propagating_logger_with_a_handler():
     assert len(logger.handlers) >= 1
 
 
-def test_exception_in_post_endpoint_is_persisted_to_log_file(live_server):
+def test_exception_in_post_endpoint_is_persisted_to_log_file(live_server, monkeypatch):
+    import bi_server
+
+    def fail_analysis(_path):
+        raise RuntimeError("falha sintetica depois da validacao do PBIX")
+
+    monkeypatch.setattr(bi_server, "analyze_pbix", fail_analysis)
     before_size = LOG_FILE.stat().st_size if LOG_FILE.exists() else 0
 
-    # PBIXRay(str(path)) levanta RuntimeError para bytes que nao sao um
-    # DataModel valido -- do_POST captura Exception, chama
-    # logger.exception(...) e so ENTAO responde 500.
+    # A entrada agora passa primeiro pela validacao ZIP G32. Forcamos uma
+    # falha no analisador apos essa fronteira para continuar protegendo o
+    # contrato de logging do 500 inesperado.
     response = requests.post(
         f"{live_server}/api/analyze",
-        data=b"not-a-real-pbix-binary-content",
+        data=make_empty_pbix_bytes(),
         headers={"Origin": live_server},
         timeout=10,
     )
@@ -57,14 +64,20 @@ def test_exception_in_post_endpoint_is_persisted_to_log_file(live_server):
     assert "bi_flow_mapper" in new_text
 
 
-def test_client_response_does_not_leak_raw_exception_message(live_server):
+def test_client_response_does_not_leak_raw_exception_message(live_server, monkeypatch):
     """Regressao: a resposta HTTP 500 deve trazer uma mensagem generica --
     o detalhe completo (que pode incluir path local/nome de arquivo do
     cliente) fica so no log server-side. Achado real do security-reviewer
     na Fase 2 -- ver BACKLOG.md/G7."""
+    import bi_server
+
+    def fail_analysis(_path):
+        raise RuntimeError("detalhe interno que nao pode vazar")
+
+    monkeypatch.setattr(bi_server, "analyze_pbix", fail_analysis)
     response = requests.post(
         f"{live_server}/api/analyze",
-        data=b"not-a-real-pbix-binary-content",
+        data=make_empty_pbix_bytes(),
         headers={"Origin": live_server},
         timeout=10,
     )
@@ -74,4 +87,4 @@ def test_client_response_does_not_leak_raw_exception_message(live_server):
     # a mensagem crua da excecao real (levantada por PBIXRay) nao deve
     # aparecer na resposta ao cliente
     assert "RuntimeError" not in response.text
-    assert "DataModel" not in response.text
+    assert "detalhe interno" not in response.text

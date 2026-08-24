@@ -5,10 +5,12 @@
   "description": "Dev-only tooling for the BI Flow Mapper test suite (Vitest/jsdom). Not used by the shipped app, which has no npm runtime dependency.",
   "type": "module",
   "scripts": {
-    "test": "vitest run"
+    "test": "vitest run",
+    "test:cov": "vitest run --coverage"
   },
   "license": "ISC",
   "devDependencies": {
+    "@vitest/coverage-v8": "^4.1.11",
     "jsdom": "^29.1.1",
     "vitest": "^4.1.11"
   }

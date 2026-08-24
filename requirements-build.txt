@@ -1,0 +1,7 @@
+# Dependencias exclusivas da geracao do executavel Windows.
+#
+# Uso:
+#   ./.venv/Scripts/python.exe -m pip install -r requirements-build.txt
+
+-r requirements.txt
+pyinstaller>=6.0,<7.0

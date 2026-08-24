@@ -17,9 +17,9 @@
             <h1>BI Flow Mapper</h1>
             <p>Power BI lineage explorer</p>
           </div>
-          <div class="lang-switcher" aria-label="Language / Idioma">
-            <button class="lang-btn active" data-lang="en-US" type="button">EN</button>
-            <button class="lang-btn" data-lang="pt-BR" type="button">PT</button>
+          <div class="lang-switcher" role="radiogroup" aria-label="Language / Idioma">
+            <button class="lang-btn active" data-lang="en-US" type="button" role="radio" aria-checked="true">EN</button>
+            <button class="lang-btn" data-lang="pt-BR" type="button" role="radio" aria-checked="false">PT</button>
           </div>
         </div>
 
@@ -34,7 +34,7 @@
           <span id="pbipFolderLabel" class="pbip-folder-label">or select a .pbip folder</span>
         </label>
 
-        <div class="toolbar" role="toolbar" aria-label="Graph actions">
+        <div class="toolbar" aria-label="Graph actions">
           <button id="demoButton" type="button" class="tool-button" title="Load demo">
             <span class="button-icon">EX</span>
             <span class="btn-text">Demo</span>
@@ -54,6 +54,10 @@
           <button id="exportDocxButton" type="button" class="tool-button" title="Export Word documentation" disabled>
             <span class="button-icon">DOC</span>
             <span class="btn-text">Export docs</span>
+          </button>
+          <button id="exportHtmlButton" type="button" class="tool-button" title="Export HTML documentation" disabled>
+            <span class="button-icon">HTML</span>
+            <span class="btn-text">Export HTML</span>
           </button>
         </div>
 
@@ -120,10 +124,11 @@
             </div>
           </div>
           <div class="tab-bar" role="tablist" aria-label="Views">
-            <button id="tabMapa" type="button" class="tab-button active" role="tab" aria-selected="true" aria-controls="panelMapa">Map</button>
-            <button id="tabRelacionamentos" type="button" class="tab-button" role="tab" aria-selected="false" aria-controls="panelRelacionamentos">Relationships</button>
-            <button id="tabArquitetura" type="button" class="tab-button" role="tab" aria-selected="false" aria-controls="panelArquitetura">Architecture</button>
-            <button id="tabPaginas" type="button" class="tab-button" role="tab" aria-selected="false" aria-controls="panelPaginas">Pages</button>
+            <button id="tabMapa" type="button" class="tab-button active" role="tab" tabindex="0" aria-selected="true" aria-controls="panelMapa">Map</button>
+            <button id="tabRelacionamentos" type="button" class="tab-button" role="tab" tabindex="-1" aria-selected="false" aria-controls="panelRelacionamentos">Relationships</button>
+            <button id="tabArquitetura" type="button" class="tab-button" role="tab" tabindex="-1" aria-selected="false" aria-controls="panelArquitetura">Architecture</button>
+            <button id="tabPaginas" type="button" class="tab-button" role="tab" tabindex="-1" aria-selected="false" aria-controls="panelPaginas">Pages</button>
+            <button id="tabInsights" type="button" class="tab-button" role="tab" tabindex="-1" aria-selected="false" aria-controls="panelInsights">Insights</button>
           </div>
           <div class="legend" id="mapLegend" aria-label="Legend">
             <span><i class="dot source"></i> Source</span>
@@ -131,15 +136,16 @@
             <span><i class="dot model"></i> Model</span>
             <span><i class="dot measure"></i> Measure</span>
             <span><i class="dot visual"></i> Visual</span>
+            <span id="lineageConfidenceLegend" class="edge-confidence-legend">Visual lineage: solid = structural · dashed = heuristic</span>
 
           </div>
         </header>
 
         <div class="tab-panels">
-        <div id="panelMapa" class="graph-frame" role="tabpanel">
+        <div id="panelMapa" class="graph-frame" role="tabpanel" aria-labelledby="tabMapa">
           <div id="graphViewport" class="graph-viewport">
             <svg id="edgeLayer" class="edge-layer" aria-hidden="true"></svg>
-            <div id="graphCanvas" class="graph-canvas" role="list" aria-label="Graph nodes"></div>
+            <div id="graphCanvas" class="graph-canvas" role="group" aria-label="Graph nodes"></div>
           </div>
           <div id="emptyState" class="empty-state">
             <strong>Start with your PBIX file</strong>
@@ -153,7 +159,7 @@
           </div>
         </div>
 
-        <div id="panelRelacionamentos" class="rel-panel hidden" role="tabpanel">
+        <div id="panelRelacionamentos" class="rel-panel hidden" role="tabpanel" aria-labelledby="tabRelacionamentos">
           <div id="relEmpty" class="empty-state rel-empty-state">
             <strong>No relationships found</strong>
             <span>Load a PBIX file analysed by the backend to see model relationships.</span>
@@ -164,7 +170,7 @@
           </div>
         </div>
 
-        <div id="panelArquitetura" class="arch-panel hidden" role="tabpanel">
+        <div id="panelArquitetura" class="arch-panel hidden" role="tabpanel" aria-labelledby="tabArquitetura">
           <div id="archEmpty" class="empty-state rel-empty-state">
             <strong>No data sources found</strong>
             <span>Load a PBIX file to see the connection architecture diagram.</span>
@@ -174,12 +180,20 @@
           </div>
         </div>
 
-        <div id="panelPaginas" class="pages-panel hidden" role="tabpanel">
+        <div id="panelPaginas" class="pages-panel hidden" role="tabpanel" aria-labelledby="tabPaginas">
           <div id="pagesEmpty" class="empty-state rel-empty-state">
             <strong>No pages found</strong>
             <span>Load a PBIX file to see the report pages.</span>
           </div>
           <div id="pagesContent" class="pages-content hidden"></div>
+        </div>
+
+        <div id="panelInsights" class="insights-panel hidden" role="tabpanel" aria-labelledby="tabInsights">
+          <div id="insightsEmpty" class="empty-state rel-empty-state">
+            <strong>Technical insights are not available</strong>
+            <span>Load a PBIX or PBIP model analysed by the local backend to inspect diagnostics and security metadata.</span>
+          </div>
+          <div id="insightsContent" class="insights-content hidden"></div>
         </div>
         </div><!-- /.tab-panels -->
       </section>

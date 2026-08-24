@@ -35,6 +35,7 @@ ROOT = Path(__file__).resolve().parents[2]
 # precisa se bastar sozinho como PRIMEIRO import, em qualquer ordem).
 MODULES = [
     "logging_setup",
+    "local_metrics",
     "graph_utils",
     "connector_matching",
     "render_graphics",

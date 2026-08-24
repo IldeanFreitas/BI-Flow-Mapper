@@ -40,13 +40,15 @@ export const TYPE_LABELS_KEYS = ["source", "query", "model", "measure", "calc_co
 
 export const state = {
   graph: { nodes: [], edges: [] },
+  graphIndex: null,           // índices de alcance/id reconstruídos a cada novo grafo
   relationships: [],          // dados estruturados vindos do backend
   architecture: [],           // [{source, iconUrl, icon, color, queries:[{name,expression,connectionPath}]}]
   lastPbix: null,
   lastPbixFile: null,
   selectedId: null,
-  activeTab: "mapa",          // "mapa" | "relacionamentos" | "arquitetura" | "paginas"
+  activeTab: "mapa",          // "mapa" | "relacionamentos" | "arquitetura" | "paginas" | "insights"
   pages: [],                  // [{name, ordinal, visualCount, width, height}]
+  insights: null,             // metadados técnicos do último PBIX/PBIP analisado
   lineageFilter: false,       // quando true: exibe só a linhagem do nó selecionado
   enabledTypes: new Set(TYPE_LABELS_KEYS),
   searchTerm: "",              // G10 — termo de busca textual (nome/DAX/M), normalizado no filtro
@@ -93,39 +95,49 @@ export function layoutGraph(graph) {
   return graph;
 }
 
-// Nós ancestrais (que alimentam startId, subindo o grafo)
-export function upstream(startId, edges) {
+// Índices de consulta do grafo. A renderização consulta impacto várias vezes
+// (seleção, detalhes, filtros); re-filtrar todas as arestas a cada nó fazia
+// essas operações crescerem de forma desnecessária em modelos grandes.
+export function buildGraphIndex(graph) {
+  const incoming = new Map();
+  const outgoing = new Map();
+  const nodesById = new Map((graph.nodes || []).map((node) => [node.id, node]));
+
+  (graph.edges || []).forEach((edgeItem) => {
+    if (!incoming.has(edgeItem.to)) incoming.set(edgeItem.to, []);
+    if (!outgoing.has(edgeItem.from)) outgoing.set(edgeItem.from, []);
+    incoming.get(edgeItem.to).push(edgeItem.from);
+    outgoing.get(edgeItem.from).push(edgeItem.to);
+  });
+
+  return { incoming, outgoing, nodesById };
+}
+
+function traverse(startId, adjacency) {
   const result = new Set();
   const queue = [startId];
-  while (queue.length) {
-    const current = queue.shift();
-    edges
-      .filter((e) => e.to === current)
-      .forEach((e) => {
-        if (!result.has(e.from)) {
-          result.add(e.from);
-          queue.push(e.from);
-        }
-      });
+  // Um índice evita queue.shift(), que renumera o array a cada visita.
+  for (let cursor = 0; cursor < queue.length; cursor += 1) {
+    const current = queue[cursor];
+    (adjacency.get(current) || []).forEach((nextId) => {
+      if (!result.has(nextId)) {
+        result.add(nextId);
+        queue.push(nextId);
+      }
+    });
   }
   return result;
 }
 
-export function downstream(startId, edges) {
-  const result = new Set();
-  const queue = [startId];
-  while (queue.length) {
-    const current = queue.shift();
-    edges
-      .filter((edgeItem) => edgeItem.from === current)
-      .forEach((edgeItem) => {
-        if (!result.has(edgeItem.to)) {
-          result.add(edgeItem.to);
-          queue.push(edgeItem.to);
-        }
-      });
-  }
-  return result;
+// Nós ancestrais (que alimentam startId, subindo o grafo)
+export function upstream(startId, edges, index = null) {
+  const graphIndex = index || buildGraphIndex({ nodes: [], edges });
+  return traverse(startId, graphIndex.incoming);
+}
+
+export function downstream(startId, edges, index = null) {
+  const graphIndex = index || buildGraphIndex({ nodes: [], edges });
+  return traverse(startId, graphIndex.outgoing);
 }
 
 // ─── Busca textual (G10) ────────────────────────────────────────────────────
@@ -264,6 +276,7 @@ export function cloneGraph(graph) {
 }
 
 export function labelForId(id) {
-  const node = state.graph.nodes.find((item) => item.id === id);
+  const indexedNode = state.graphIndex && state.graphIndex.nodesById.get(id);
+  const node = indexedNode || state.graph.nodes.find((item) => item.id === id);
   return node ? node.label : id;
 }

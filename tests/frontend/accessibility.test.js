@@ -1,5 +1,5 @@
 // G8 — checklist de acessibilidade (skill `biflowmapper-a11y-checklist`):
-// aria-pressed no card selecionado, papel de lista no container, aria-live
+// aria-pressed no card selecionado, grupo semântico no container, aria-live
 // nos paineis que mudam de conteudo dinamicamente sem foco do usuario.
 import { describe, expect, it } from "vitest";
 import { loadApp } from "./setup.js";
@@ -54,11 +54,11 @@ describe("G8 — aria-pressed no card selecionado", () => {
   });
 });
 
-describe("G8 — papel de lista: role=list no container, sem role=listitem nos cards", () => {
-  it("#graphCanvas mantem role=list", async () => {
+describe("A11y — coleção interativa de nós", () => {
+  it("#graphCanvas usa role=group; os cards continuam botões nativos", async () => {
     await loadApp();
     const graphCanvas = document.getElementById("graphCanvas");
-    expect(graphCanvas.getAttribute("role")).toBe("list");
+    expect(graphCanvas.getAttribute("role")).toBe("group");
   });
 
   it("nenhum .node-card renderizado tem role=listitem", async () => {
@@ -81,7 +81,49 @@ describe("G8 — papel de lista: role=list no container, sem role=listitem nos c
     cards.forEach((card) => {
       expect(card.hasAttribute("role")).toBe(false);
     });
-    expect(graphCanvas.getAttribute("role")).toBe("list");
+    expect(graphCanvas.getAttribute("role")).toBe("group");
+  });
+
+  it("mantém o foco no card acionado por teclado após selecionar e redesenhar", async () => {
+    const app = await loadApp();
+    const firstCard = document.querySelector("#graphCanvas .node-card");
+    firstCard.focus();
+    app.selectNode(firstCard.dataset.nodeId);
+    expect(document.activeElement.dataset.nodeId).toBe(firstCard.dataset.nodeId);
+  });
+});
+
+describe("A11y — tabs e idioma", () => {
+  it("ArrowRight move a seleção e o foco para a próxima tab", async () => {
+    await loadApp();
+    const mapTab = document.getElementById("tabMapa");
+    const relationshipTab = document.getElementById("tabRelacionamentos");
+    mapTab.focus();
+    mapTab.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowRight", bubbles: true }));
+    expect(document.activeElement).toBe(relationshipTab);
+    expect(relationshipTab.getAttribute("aria-selected")).toBe("true");
+    expect(relationshipTab.tabIndex).toBe(0);
+    expect(mapTab.tabIndex).toBe(-1);
+  });
+
+  it("o seletor de idioma expõe o estado ativo com radio/aria-checked", async () => {
+    const app = await loadApp();
+    app.setLocale("pt-BR");
+    const pt = document.querySelector('[data-lang="pt-BR"]');
+    const en = document.querySelector('[data-lang="en-US"]');
+    expect(pt.getAttribute("role")).toBe("radio");
+    expect(pt.getAttribute("aria-checked")).toBe("true");
+    expect(en.getAttribute("aria-checked")).toBe("false");
+  });
+
+  it("ArrowRight troca o idioma do radiogroup e mantém o foco", async () => {
+    await loadApp();
+    const en = document.querySelector('[data-lang="en-US"]');
+    const pt = document.querySelector('[data-lang="pt-BR"]');
+    en.focus();
+    en.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowRight", bubbles: true }));
+    expect(document.activeElement).toBe(pt);
+    expect(pt.getAttribute("aria-checked")).toBe("true");
   });
 });
 

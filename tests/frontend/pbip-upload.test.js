@@ -206,13 +206,14 @@ describe("G17 — #pbipFolderInput (change) aciona hooks.loadPbipFolder", () => 
   });
 });
 
-describe("G17 — regressão: loadPbipFolder() bem-sucedido não deixa reexportar docx de um .pbix anterior", () => {
-  it("zera state.lastPbixFile e mantém #exportDocxButton desabilitado após sucesso", async () => {
+describe("G17 — regressão: loadPbipFolder() bem-sucedido não deixa reexportar documentos de um .pbix anterior", () => {
+  it("zera state.lastPbixFile e mantém os exports de documento desabilitados após sucesso", async () => {
     const app = await loadApp();
 
     // simula um .pbix já carregado antes (fluxo normal deixaria isso habilitado)
     app.state.lastPbixFile = new File(["x"], "anterior.pbix");
     document.getElementById("exportDocxButton").disabled = false;
+    document.getElementById("exportHtmlButton").disabled = false;
 
     vi.stubGlobal(
       "fetch",
@@ -227,6 +228,7 @@ describe("G17 — regressão: loadPbipFolder() bem-sucedido não deixa reexporta
 
     expect(app.state.lastPbixFile).toBeNull();
     expect(document.getElementById("exportDocxButton").disabled).toBe(true);
+    expect(document.getElementById("exportHtmlButton").disabled).toBe(true);
   });
 });
 

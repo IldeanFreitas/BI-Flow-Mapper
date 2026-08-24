@@ -19,3 +19,12 @@ describe("G8 — .lang-btn tem altura minima de alvo de toque", () => {
     expect(ruleBody).toMatch(/min-height:\s*24px/);
   });
 });
+
+describe("G34 — tipografia nao depende de rede externa", () => {
+  it("usa uma pilha de fonte local definida como token", () => {
+    expect(CSS).not.toMatch(/@import\s+url\(/i);
+    expect(CSS).not.toMatch(/fonts\.googleapis\.com|fonts\.gstatic\.com/i);
+    expect(CSS).toMatch(/--font-ui:\s*'Segoe UI Variable'/);
+    expect(CSS).toMatch(/font-family:\s*var\(--font-ui\)/);
+  });
+});

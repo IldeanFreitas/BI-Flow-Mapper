@@ -10,9 +10,10 @@
 // dentro de corpos de função (ver nota em main.js).
 import { escapeHtml } from "./dom-utils.js";
 import { els, setSubtitle } from "./dom-refs.js";
-import { state, layoutGraph, upstream, downstream, nodeMatchesSearch, labelForId, initials } from "./graph-model.js";
+import { state, layoutGraph, buildGraphIndex, upstream, downstream, nodeMatchesSearch, labelForId, initials } from "./graph-model.js";
 import { t, typeLabels } from "./i18n.js";
 import { applyZoom } from "./zoom.js";
+import { recordLocalMetric } from "./local-metrics.js";
 
 export function renderFilters() {
   els.typeFilters.innerHTML = "";
@@ -56,21 +57,24 @@ export function handleSearchInput(rawValue) {
 // ─── Fim Busca textual ──────────────────────────────────────────────────────
 
 export function setGraph(graph, title, subtitle) {
+  const renderStartedAt = performance.now();
   state.graph = layoutGraph(graph);
+  state.graphIndex = buildGraphIndex(state.graph);
   state.selectedId = null;
   els.title.textContent = title;
   setSubtitle(subtitle);
   applyZoom(1); // G11 — cada novo grafo carregado começa em 100%, sem herdar zoom de um grafo anterior
   renderGraph();
+  recordLocalMetric("render", performance.now() - renderStartedAt, state.graph);
 }
 
 export function renderGraph() {
   const graph = state.graph;
-  const impactIds = state.selectedId ? downstream(state.selectedId, graph.edges) : new Set();
+  const impactIds = state.selectedId ? downstream(state.selectedId, graph.edges, state.graphIndex) : new Set();
 
   // ── Modo Filtro de Linhagem ──────────────────────────────────────────────
   if (state.lineageFilter && state.selectedId) {
-    const ancestorIds = upstream(state.selectedId, graph.edges);
+    const ancestorIds = upstream(state.selectedId, graph.edges, state.graphIndex);
     const lineageIds  = new Set([state.selectedId, ...ancestorIds, ...impactIds]);
 
     // Apenas nós da linhagem, que passam no filtro de tipo e no termo de busca (G10)
@@ -280,10 +284,18 @@ export function renderEdges(edges, nodes, impactIds) {
     const x2 = to.x;
     const y2 = to.y + 37;
     const mid = x1 + Math.max(40, (x2 - x1) / 2);
+    const linkType = edgeItem.linkType === "structural" || edgeItem.linkType === "heuristic"
+      ? edgeItem.linkType
+      : "";
     const active = state.selectedId && (edgeItem.from === state.selectedId || impactIds.has(edgeItem.to));
-    const stroke = active ? "#b23a48" : "#8c98a3";
+    const confidenceStroke = linkType === "structural" ? "#107C10" : linkType === "heuristic" ? "#D83B01" : "#8c98a3";
+    const stroke = active ? "#b23a48" : confidenceStroke;
     const width = active ? 3 : 2;
-    return `<path d="M ${x1} ${y1} C ${mid} ${y1}, ${mid} ${y2}, ${x2} ${y2}" fill="none" stroke="${stroke}" stroke-width="${width}" marker-end="url(#arrow)" />`;
+    const dash = linkType === "heuristic" ? ' stroke-dasharray="7 5"' : "";
+    const confidenceLabel = linkType === "structural" ? t().linkTypeStructural : t().linkTypeHeuristic;
+    const title = linkType ? `<title>${escapeHtml(confidenceLabel)}</title>` : "";
+    const typeAttribute = linkType ? ` data-link-type="${linkType}"` : "";
+    return `<path d="M ${x1} ${y1} C ${mid} ${y1}, ${mid} ${y2}, ${x2} ${y2}" fill="none" stroke="${stroke}" stroke-width="${width}" marker-end="url(#arrow)"${dash}${typeAttribute}>${title}</path>`;
   });
 
   els.edgeLayer.innerHTML = `
@@ -297,8 +309,20 @@ export function renderEdges(edges, nodes, impactIds) {
 }
 
 export function selectNode(id) {
+  const selectionStartedAt = performance.now();
+  const activeNodeId = document.activeElement && document.activeElement.dataset
+    ? document.activeElement.dataset.nodeId
+    : null;
   state.selectedId = state.selectedId === id ? null : id;
   renderGraph();
+  // renderGraph reconstrói os cards; devolve foco ao mesmo controle quando a
+  // seleção foi acionada pelo teclado, em vez de deixá-lo cair no <body>.
+  if (activeNodeId) {
+    const replacement = Array.from(els.graphCanvas.querySelectorAll(".node-card"))
+      .find((card) => card.dataset.nodeId === activeNodeId);
+    if (replacement) replacement.focus();
+  }
+  recordLocalMetric("selection", performance.now() - selectionStartedAt, state.graph);
 }
 
 export function renderDetails() {
@@ -309,8 +333,20 @@ export function renderDetails() {
   }
 
   const incoming = state.graph.edges.filter((edgeItem) => edgeItem.to === node.id).length;
-  const affected = Array.from(downstream(node.id, state.graph.edges));
+  const affected = Array.from(downstream(node.id, state.graph.edges, state.graphIndex));
   const sample = node.meta.expression ? `<code>${escapeHtml(node.meta.expression.slice(0, 1200))}</code>` : "";
+  const confidenceEdges = state.graph.edges.filter((edgeItem) =>
+    (edgeItem.from === node.id || edgeItem.to === node.id) &&
+    (edgeItem.linkType === "structural" || edgeItem.linkType === "heuristic")
+  );
+  const confidenceMarkup = confidenceEdges.length ? `<div class="lineage-confidence">
+    <strong>${escapeHtml(t().detailsLineageConfidence)}</strong>
+    <ul>${confidenceEdges.map((edgeItem) => {
+      const otherId = edgeItem.from === node.id ? edgeItem.to : edgeItem.from;
+      const label = edgeItem.linkType === "structural" ? t().linkTypeStructural : t().linkTypeHeuristic;
+      return `<li><span class="confidence-badge confidence-badge--${edgeItem.linkType}">${escapeHtml(label)}</span> ${escapeHtml(labelForId(otherId))}</li>`;
+    }).join("")}</ul>
+  </div>` : "";
 
   els.details.innerHTML = `
     <h3>${escapeHtml(node.label)}</h3>
@@ -318,6 +354,7 @@ export function renderDetails() {
     <p>${t().detailsDirectDeps} ${incoming}</p>
     <p>${t().detailsImpacted} ${affected.length}</p>
     ${affected.length ? `<p>${t().detailsAffects} ${affected.map((id) => escapeHtml(labelForId(id))).join(", ")}</p>` : ""}
+    ${confidenceMarkup}
     ${sample}
   `;
 }

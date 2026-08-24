@@ -1,0 +1,27 @@
+# Runtime offline validado para Windows x64 com CPython 3.12.
+# Gerado a partir do ambiente validado em 2026-08-24.
+# Nao inclua aqui ferramentas de build, testes ou lint.
+apsw==3.53.4.0
+bottle==0.13.4
+cffi==2.1.1
+clr_loader==0.3.1
+kaitaistruct==0.11
+lxml==6.1.2
+numpy==2.5.2
+pandas==3.0.5
+pbixray==0.15.4
+pillow==12.3.0
+# O projeto e publicado apenas como sdist; o script de pacote o converte em
+# wheel no computador de build para manter a instalacao do cliente offline.
+proxy-tools==0.1.0
+pycparser==3.0
+python-dateutil==2.9.0.post0
+python-docx==1.2.0
+pythonnet==3.1.0
+pywebview==6.2.1
+six==1.17.0
+typing_extensions==4.16.0
+tzdata==2026.3
+xmhuffman==0.3.0
+xpress8==0.1.0
+xpress9==0.3.8

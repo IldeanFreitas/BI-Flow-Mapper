@@ -42,6 +42,7 @@ export const els = {
   panelMapa: document.getElementById("panelMapa"),
   panelRelacionamentos: document.getElementById("panelRelacionamentos"),
   mapLegend: document.getElementById("mapLegend"),
+  lineageConfidenceLegend: document.getElementById("lineageConfidenceLegend"),
   relEmpty: document.getElementById("relEmpty"),
   relContent: document.getElementById("relContent"),
   relDiagram: document.getElementById("relDiagram"),
@@ -49,6 +50,7 @@ export const els = {
   lineageToggle: document.getElementById("lineageToggle"),
   exportImageButton: document.getElementById("exportImageButton"),
   exportDocxButton: document.getElementById("exportDocxButton"),
+  exportHtmlButton: document.getElementById("exportHtmlButton"),
   tabArquitetura: document.getElementById("tabArquitetura"),
   panelArquitetura: document.getElementById("panelArquitetura"),
   archEmpty: document.getElementById("archEmpty"),
@@ -58,6 +60,10 @@ export const els = {
   panelPaginas: document.getElementById("panelPaginas"),
   pagesEmpty: document.getElementById("pagesEmpty"),
   pagesContent: document.getElementById("pagesContent"),
+  tabInsights: document.getElementById("tabInsights"),
+  panelInsights: document.getElementById("panelInsights"),
+  insightsEmpty: document.getElementById("insightsEmpty"),
+  insightsContent: document.getElementById("insightsContent"),
 };
 
 export function setSubtitle(text) {

@@ -97,6 +97,7 @@ def load_pbixray() -> bool:
 # `from X import Y`; NAO reordene sem entender essas notas.)
 
 from logging_setup import LOG_FILE, configure_logging  # noqa: E402  (logger ja importado acima)
+from local_metrics import LOCAL_METRICS, LocalMetrics, lineage_coverage  # noqa: E402
 
 from graph_utils import (  # noqa: E402
     _LONG_TOKEN_PATTERN,
@@ -252,15 +253,23 @@ from tmdl_analysis import (  # noqa: E402
 
 from bi_server import (  # noqa: E402
     ASSETS_DIR,
+    ANALYSIS_ACQUIRE_TIMEOUT_SECONDS,
+    ANALYSIS_SEMAPHORE,
     DEFAULT_PORT,
     HOST,
+    MAX_CONCURRENT_ANALYSES,
     MAX_UPLOAD_BYTES,
+    MAX_ZIP_COMPRESSION_RATIO,
+    MAX_ZIP_ENTRIES,
+    MAX_ZIP_UNCOMPRESSED_BYTES,
     PORT_FILE,
     ROOT,
     RUNTIME_DIR,
+    SPOOL_MAX_MEMORY_BYTES,
     STATIC_ALLOWLIST_EXACT,
     STATIC_ALLOWLIST_PREFIXES,
     Handler,
+    UploadValidationError,
     derive_tmdl_model_name,
     find_port,
     is_healthy,
@@ -269,6 +278,7 @@ from bi_server import (  # noqa: E402
     open_browser,
     requested_port,
     split_multipart,
+    validate_pbix_archive,
     write_port_file,
 )
 

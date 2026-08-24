@@ -30,6 +30,12 @@ function applyBackendGraph(graph, title, subtitle) {
   state.relationships = graph.relationships || [];
   state.pages        = graph.pages        || [];
   state.architecture = buildArchitectureData(graph);
+  state.insights = {
+    source: graph.source || "browser-fallback",
+    diagnostics: graph.diagnostics || null,
+    securityRoles: graph.securityRoles || [],
+    unusedObjects: graph.unusedObjects || [],
+  };
   rememberPbix(graph, title, subtitle);
   setGraph(graph, title, subtitle);
 }
@@ -39,6 +45,7 @@ export async function loadPbix(file) {
   setLoading(true);
   state.lastPbixFile = file;
   els.exportDocxButton.disabled = false;
+  els.exportHtmlButton.disabled = false;
   try {
     const backendGraph = await analyzeWithBackend(file);
     if (backendGraph) {
@@ -51,6 +58,7 @@ export async function loadPbix(file) {
     state.relationships = [];
     state.architecture  = [];
     state.pages         = [];
+    state.insights      = null;
     try {
       const arrayBuffer = await file.arrayBuffer();
       const entries = await readZipEntries(arrayBuffer);
@@ -142,6 +150,7 @@ export async function loadPbipFolder(fileList) {
   // na tela.
   state.lastPbixFile = null;
   els.exportDocxButton.disabled = true;
+  els.exportHtmlButton.disabled = true;
   try {
     const graph = await analyzeTmdlWithBackend(tmdlFiles);
     applyBackendGraph(graph, derivePbipTitle(tmdlFiles), "");
@@ -157,13 +166,21 @@ export function rememberPbix(graph, title, subtitle) {
   state.lastPbix = {
     graph: cloneGraph(graph),
     title,
-    subtitle
+    subtitle,
+    relationships: cloneGraph(state.relationships),
+    architecture: cloneGraph(state.architecture),
+    pages: cloneGraph(state.pages),
+    insights: cloneGraph(state.insights),
   };
   els.pbixButton.disabled = false;
 }
 
 export function loadLastPbix() {
   if (!state.lastPbix) return;
+  state.relationships = cloneGraph(state.lastPbix.relationships || []);
+  state.architecture = cloneGraph(state.lastPbix.architecture || []);
+  state.pages = cloneGraph(state.lastPbix.pages || []);
+  state.insights = cloneGraph(state.lastPbix.insights || null);
   setGraph(cloneGraph(state.lastPbix.graph), state.lastPbix.title, state.lastPbix.subtitle);
 }
 
@@ -285,6 +302,7 @@ export function loadDemo() {
     { name: "Target Tracker",    ordinal: 2, visualCount: 3, width: 1280, height: 720 },
     { name: "FX Impact",         ordinal: 3, visualCount: 2, width: 1280, height: 720 },
   ];
+  state.insights = null;
 }
 
 // Wireup de #pbixInput (change), #uploadZone (dragenter/dragover/dragleave/
